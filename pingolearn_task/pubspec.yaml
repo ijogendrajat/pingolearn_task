@@ -21,7 +21,7 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  http: 0.13.0
+  http: ^0.12.2
   speech_recognition: ^0.3.0+1
   avatar_glow: ^2.0.2
   text_to_speech: ^0.2.3

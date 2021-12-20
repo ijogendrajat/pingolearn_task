@@ -1,13 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:http/http.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,10 +29,37 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  //speech to text part
+
   stt.SpeechToText _speech;
-  String _text = "Say Something here";
+  String _text = "cow";
   bool _isListening = false;
-  // String _currentLocaleId = '';
+
+  //api data
+  String url = "https://owlbot.info/api/v4/dictionary/";
+  String token = "08a5e3222b8be11a8bdcbaa455cb0f7ab1e7f608";
+  Stream _stream;
+  StreamController streamController;
+  searchText() async {
+    if (_text == null || _text.length == 0) {
+      streamController.add(null);
+      return;
+    }
+    streamController.add("waiting");
+    Response response = await get(url + _text.trim(),
+        headers: {"Authorization": "Token " + token});
+    streamController.add(json.decode(response.body));
+  }
+
+  @override
+  void initState() {
+    _speech = stt.SpeechToText();
+    super.initState();
+    streamController = StreamController();
+    _stream = streamController.stream;
+  }
+
+  //onpressed function here
 
   void _listen() async {
     if (!_isListening) {
@@ -40,9 +70,9 @@ class _MyHomePageState extends State<MyHomePage> {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-          // localeId: "en-US",
           onResult: (val) => setState(() {
             _text = val.recognizedWords;
+            searchText();
           }),
         );
       }
@@ -53,102 +83,137 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  // ignore: must_call_super
-  void initState() {
-    _speech = stt.SpeechToText();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appbar
       appBar: AppBar(
         title: Text("PingoLearn Task"),
         centerTitle: true,
       ),
-      body: SafeArea(
-          child: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(_text),
-            Card(
-              elevation: 10,
-              child: Container(
-                height: 50,
-                width: MediaQuery.of(context).size.width / 1.2,
-                child: Column(children: [
-                  Text(
-                    "Your word",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      // body
+      body: Container(
+        margin: EdgeInsets.all(8),
+        child: StreamBuilder(
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.data == null) {
+              return Center(
+                child: Text("Press mic button and speak..."),
+              );
+            }
+            if (snapshot.data == "waiting") {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            // output
+            return ListView.builder(
+              itemCount: snapshot.data["definitions"].length,
+              itemBuilder: (BuildContext context, int index) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text("your speech to text = " + _text),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Card(
+                        elevation: 10,
+                        child: Container(
+                          height: 50,
+                          width: MediaQuery.of(context).size.width / 1.2,
+                          child: Column(children: [
+                            Text(
+                              "Your word",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              _text,
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.normal),
+                            ),
+                          ]),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Card(
+                        elevation: 10,
+                        child: Container(
+                          padding: EdgeInsets.all(5),
+                          height: 100,
+                          width: MediaQuery.of(context).size.width / 1.2,
+                          child: Column(children: [
+                            Text(
+                              "Meaning",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              snapshot.data["definitions"][index]["definition"]
+                                  .toString(),
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.normal),
+                            ),
+                          ]),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Card(
+                        elevation: 10,
+                        child: Container(
+                          height: 50,
+                          width: MediaQuery.of(context).size.width / 1.2,
+                          child: Column(children: [
+                            Text(
+                              "Example",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              _text.toString(),
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.normal),
+                            ),
+                          ]),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Card(
+                        elevation: 10,
+                        child: Container(
+                          height: 200,
+                          width: 200,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(snapshot.data["definitions"]
+                                      [index]["image_url"]
+                                  .toString()),
+                              fit: BoxFit.fill,
+                            ),
+                            // shape: BoxShape,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    _text,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ]),
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Card(
-              elevation: 10,
-              child: Container(
-                height: 100,
-                width: MediaQuery.of(context).size.width / 1.2,
-                child: Column(children: [
-                  Text(
-                    "Meaning",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    _text,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ]),
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Card(
-              elevation: 10,
-              child: Container(
-                height: 50,
-                width: MediaQuery.of(context).size.width / 1.2,
-                child: Column(children: [
-                  Text(
-                    "Example",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    _text,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ]),
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Card(
-              elevation: 10,
-              child: Container(
-                height: 200,
-                width: 200,
-                child: Column(children: [
-                  Text(
-                    "Photo",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ]),
-              ),
-            ),
-          ],
+                );
+              },
+            );
+          },
+          stream: _stream,
         ),
-      )),
+      ),
+      //floating action button
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: AvatarGlow(
         animate: _isListening,
