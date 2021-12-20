@@ -29,8 +29,7 @@ class _MyHomePageState extends State<MyHomePage> {
   stt.SpeechToText _speech;
   String _text = "Say Something here";
   bool _isListening = false;
-  double _confidence = 1.0;
-  String _currentLocaleId = '';
+  // String _currentLocaleId = '';
 
   void _listen() async {
     if (!_isListening) {
@@ -41,12 +40,9 @@ class _MyHomePageState extends State<MyHomePage> {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-          localeId: "en-US",
+          // localeId: "en-US",
           onResult: (val) => setState(() {
             _text = val.recognizedWords;
-            if (val.hasConfidenceRating && val.confidence > 0) {
-              _confidence = val.confidence;
-            }
           }),
         );
       }
@@ -57,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  // ignore: must_call_super
   void initState() {
     _speech = stt.SpeechToText();
   }
@@ -70,8 +67,86 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: SafeArea(
           child: SingleChildScrollView(
-        child: Container(
-          child: Text(_text),
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(_text),
+            Card(
+              elevation: 10,
+              child: Container(
+                height: 50,
+                width: MediaQuery.of(context).size.width / 1.2,
+                child: Column(children: [
+                  Text(
+                    "Your word",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _text,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ]),
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Card(
+              elevation: 10,
+              child: Container(
+                height: 100,
+                width: MediaQuery.of(context).size.width / 1.2,
+                child: Column(children: [
+                  Text(
+                    "Meaning",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _text,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ]),
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Card(
+              elevation: 10,
+              child: Container(
+                height: 50,
+                width: MediaQuery.of(context).size.width / 1.2,
+                child: Column(children: [
+                  Text(
+                    "Example",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _text,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ]),
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Card(
+              elevation: 10,
+              child: Container(
+                height: 200,
+                width: 200,
+                child: Column(children: [
+                  Text(
+                    "Photo",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ]),
+              ),
+            ),
+          ],
         ),
       )),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
